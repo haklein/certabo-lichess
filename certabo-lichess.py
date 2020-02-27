@@ -133,7 +133,7 @@ class serialreader(threading.Thread):
                     if not self.serial_out.empty():
                         data = self.serial_out.get()
                         self.serial_out.task_done()
-                        logging.debug(f'Sending to serial: {data}')
+                        # logging.debug(f'Sending to serial: {data}')
                         uart.write(data)
                 except Exception as e:
                     logging.info(f'Exception during serial communication: {str(e)}')
@@ -150,7 +150,6 @@ class Certabo():
         self.color = chess.WHITE
         self.starting_position = chess.STARTING_FEN
         self.chessboard = chess.Board(chess.STARTING_FEN)
-        self.tmp_chessboard = chess.Board(chess.STARTING_FEN)
         self.board_state_usb = ""
         self.mystate = "init"
         self.reference = ""
@@ -200,7 +199,6 @@ class Certabo():
 
     def new_game(self):
         self.chessboard = chess.Board()
-        self.tmp_chessboard = chess.Board()
         self.mystate = "init"
 
     def set_board_from_fen(self, fen):
@@ -236,7 +234,7 @@ class Certabo():
                     test_state = codes.usb_data_to_FEN(self.usb_data_processed, self.rotate180)
                     if test_state != "":
                         self.board_state_usb = test_state
-                        logging.info(f'info string FEN {test_state}')
+                        # logging.info(f'info string FEN {test_state}')
                         self.diff_leds()
 
     def calibrate_from_usb_data(self, usb_data):
@@ -285,7 +283,7 @@ class Game(threading.Thread):
             logging.info('it is our turn')
             # it's our turn..
             while self.certabo.has_user_move() == []:
-                time.sleep(0.5)
+                time.sleep(0.1)
             self.client.board.make_move(self.certabo.get_reference(), self.certabo.has_user_move()[0])
 
     def handle_chat_line(self, chat_line):
@@ -325,34 +323,28 @@ def main():
         if game['isMyTurn']:
             certabo.set_state('myturn')
 
-    while True:
-        time.sleep(0.001)
+    for event in client.board.stream_incoming_events():
+        if event['type'] == 'challenge':
+            print("Challenge received")
+            print(event)
+        elif event['type'] == 'gameStart':
+            print("game start received")
 
-        print(certabo.has_user_move())
+            # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
 
+            print(event)
+            game_data = event['game']
+            print(game_data)
+             
+            game = Game(client, certabo, game_data['id'])
+            game.daemon = True
+            game.start()
 
-        for event in client.board.stream_incoming_events():
-            if event['type'] == 'challenge':
-                print("Challenge received")
-                print(event)
-            elif event['type'] == 'gameStart':
-                print("game start received")
-
-                # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
-
-                print(event)
-                game_data = event['game']
-                print(game_data)
-                 
-                game = Game(client, certabo, game_data['id'])
-                game.daemon = True
-                game.start()
-
-                if certabo.get_state() == 'myturn':
-                    certabo.set_state('init')
-                    while certabo.has_user_move() == []:
-                        time.sleep(0.5)
-                    client.board.make_move(certabo.get_reference(), certabo.has_user_move()[0])
+            if certabo.get_state() == 'myturn':
+                certabo.set_state('init')
+                while certabo.has_user_move() == []:
+                    time.sleep(0.1)
+                client.board.make_move(certabo.get_reference(), certabo.has_user_move()[0])
 
 
                 
