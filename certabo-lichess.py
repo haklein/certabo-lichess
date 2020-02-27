@@ -212,7 +212,7 @@ class Certabo():
         s2 = self.board_state_usb.split(" ")[0]
         if (s1 != s2):
             diffmap = codes.diff2squareset(s1, s2)
-            logging.debug(f'Difference on Squares:\n{diffmap}')
+            # logging.debug(f'Difference on Squares:\n{diffmap}')
             self.send_leds(codes.squareset2ledbytes(diffmap))
         else:
             self.send_leds()
@@ -281,10 +281,11 @@ class Game(threading.Thread):
             self.certabo.set_board_from_fen(tmp_chessboard.fen())
         if tmp_chessboard.turn == self.certabo.get_color():
             logging.info('it is our turn')
-            # it's our turn..
             while self.certabo.has_user_move() == []:
                 time.sleep(0.1)
-            self.client.board.make_move(self.certabo.get_reference(), self.certabo.has_user_move()[0])
+            ucimove = self.certabo.has_user_move()[0]
+            logging.info(f'our move: {ucimove}') 
+            self.client.board.make_move(self.certabo.get_reference(), ucimove)
 
     def handle_chat_line(self, chat_line):
         print(chat_line)
@@ -292,9 +293,7 @@ class Game(threading.Thread):
 
 
 def main():
-
     certabo = Certabo(portname)
-
 
     with open('./lichess.token') as f:
         token = f.read().strip()
@@ -302,28 +301,26 @@ def main():
     session = berserk.TokenSession(token)
     client = berserk.Client(session)
 
-    #my = client.account.get()
-
     def setup_new_gameid(gameId):
-        #ongoing = client.games.get_ongoing()
-        #print("Ongoing games:")
-        #print(ongoing)
-        # if (len(ongoing) > 0): # apparently there is already an ongoing game. The first one should be the most important one according to API docs, we focus on that one
         for game in client.games.get_ongoing():
             if game['gameId'] == gameId:
                 certabo.new_game()
                 certabo.set_reference(game['gameId'])
-                logging.info(f'found gameId: {certabo.get_reference()}')
+                logging.info(f'setup_new_gameid() found gameId: {certabo.get_reference()}')
                 tmp_chessboard = chess.Board()
                 # unfortunately this is not a complete FEN. So we can only determine position and who's turn it is for an already ongoing game, but have no idea about castling 
                 # rights and en passant. But that's the best we can do for now, and on the next state update we'll get all moves and can replay them to get a complete board state
                 tmp_chessboard.set_board_fen(game['fen']) 
                 if game['isMyTurn'] and game['color']=='black':
-                    tmp_chessboard.turn = chess.BLACK;
+                    tmp_chessboard.turn = chess.BLACK
+                else:
+                    tmp_chessboard.turn = chess.WHITE
                 certabo.set_board_from_fen(tmp_chessboard.fen())
                 logging.info(f'final FEN: {tmp_chessboard.fen()}')
                 if game['color'] == 'black':
                     certabo.set_color(chess.BLACK)
+                else:
+                    certabo.set_color(chess.WHITE)
                 if game['isMyTurn']:
                     certabo.set_state('myturn')
 

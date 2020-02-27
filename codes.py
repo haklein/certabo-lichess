@@ -623,6 +623,6 @@ def get_moves(board, fen):
                 return [move.uci(), move2.uci()]
             copy_board.pop()
         copy_board.pop()
-    logging.debug('Unable to detect moves')
+    # logging.debug('Unable to detect moves')
     raise InvalidMove()
 
