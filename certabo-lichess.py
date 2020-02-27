@@ -304,7 +304,7 @@ def main():
     session = berserk.TokenSession(token)
     client = berserk.Client(session)
 
-    my = client.account.get()
+    #my = client.account.get()
     ongoing = client.games.get_ongoing()
     print("Ongoing games:")
     print(ongoing)
