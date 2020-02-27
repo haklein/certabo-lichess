@@ -601,9 +601,9 @@ def get_moves(board, fen):
     :return:
     """
     board_fen = fen.split()[0]
-    logging.debug('Getting diff between {} and {}'.format(board.board_fen(), board_fen))
+    # logging.debug('Getting diff between {} and {}'.format(board.board_fen(), board_fen))
     if board.board_fen() == board_fen:
-        logging.debug('Positions identical')
+        # logging.debug('Positions identical')
         return []
     copy_board = board.copy()  # type: chess.Board
     moves = list(board.generate_legal_moves())
