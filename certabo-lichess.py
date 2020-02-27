@@ -303,25 +303,29 @@ def main():
     client = berserk.Client(session)
 
     #my = client.account.get()
-    ongoing = client.games.get_ongoing()
-    print("Ongoing games:")
-    print(ongoing)
-    if (len(ongoing) > 0): # apparently there is already an ongoing game. The first one should be the most important one according to API docs, we focus on that one
-        game = ongoing[0]
-        certabo.set_reference(game['gameId'])
-        logging.info(f'found gameId: {certabo.get_reference()}')
-        tmp_chessboard = chess.Board()
-        # unfortunately this is not a complete FEN. So we can only determine position and who's turn it is, but have no idea about castling rights and en passant.
-        # but that's the best we can do for now, and on the next state update we'll get all moves and can replay them to get a complete board state
-        tmp_chessboard.set_board_fen(game['fen']) 
-        if game['isMyTurn'] and game['color']=='black':
-            tmp_chessboard.turn = chess.BLACK;
-        certabo.set_board_from_fen(tmp_chessboard.fen())
-        logging.info(f'final FEN: {tmp_chessboard.fen()}')
-        if game['color'] == 'black':
-            certabo.set_color(chess.BLACK)
-        if game['isMyTurn']:
-            certabo.set_state('myturn')
+
+    def setup_new_gameid(gameId):
+        #ongoing = client.games.get_ongoing()
+        #print("Ongoing games:")
+        #print(ongoing)
+        # if (len(ongoing) > 0): # apparently there is already an ongoing game. The first one should be the most important one according to API docs, we focus on that one
+        for game in client.games.get_ongoing():
+            if game['gameId'] == gameId:
+                certabo.new_game()
+                certabo.set_reference(game['gameId'])
+                logging.info(f'found gameId: {certabo.get_reference()}')
+                tmp_chessboard = chess.Board()
+                # unfortunately this is not a complete FEN. So we can only determine position and who's turn it is for an already ongoing game, but have no idea about castling 
+                # rights and en passant. But that's the best we can do for now, and on the next state update we'll get all moves and can replay them to get a complete board state
+                tmp_chessboard.set_board_fen(game['fen']) 
+                if game['isMyTurn'] and game['color']=='black':
+                    tmp_chessboard.turn = chess.BLACK;
+                certabo.set_board_from_fen(tmp_chessboard.fen())
+                logging.info(f'final FEN: {tmp_chessboard.fen()}')
+                if game['color'] == 'black':
+                    certabo.set_color(chess.BLACK)
+                if game['isMyTurn']:
+                    certabo.set_state('myturn')
 
     for event in client.board.stream_incoming_events():
         if event['type'] == 'challenge':
@@ -331,15 +335,15 @@ def main():
             print("game start received")
 
             # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
-
-            print(event)
+            # print(event)
             game_data = event['game']
-            print(game_data)
+            # print(game_data)
              
             game = Game(client, certabo, game_data['id'])
             game.daemon = True
             game.start()
 
+            setup_new_gameid(game_data['id'])
             if certabo.get_state() == 'myturn':
                 certabo.set_state('init')
                 while certabo.has_user_move() == []:
