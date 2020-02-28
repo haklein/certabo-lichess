@@ -16,6 +16,11 @@ The API token can be created in the lichess preferences page ("API Access tokens
 - berserk lichess client (with board support, see https://github.com/rhgrant10/berserk/pull/10 )
 
 simplejson must not be installed as it doesn't work with berserk
+
+### calibration
+
+Calibration can be run with the optional "--calibrate" command line argument. Make sure to have the pieces on the correct places.
+
 ## Todo
 
 * shake out bugs

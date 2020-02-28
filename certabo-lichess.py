@@ -67,6 +67,7 @@ for d in (CERTABO_SAVE_PATH, CERTABO_DATA_PATH):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port")
+parser.add_argument("--calibrate", action="store_true")
 # ignore additional parameters
 # parser.add_argument('bar', nargs='?')
 args = parser.parse_args()
@@ -76,6 +77,9 @@ if args.port is not None:
     portname = args.port
 port = port2number(portname)
 
+calibrate = False
+if args.calibrate:
+    calibrate = True
 
 class serialreader(threading.Thread):
     def __init__ (self, handler, device='auto'):
@@ -141,10 +145,10 @@ class serialreader(threading.Thread):
 
 
 class Certabo():
-    def __init__(self, port='auto', **kwargs):
+    def __init__(self, port='auto', calibrate=False, **kwargs):
         super().__init__(**kwargs)
         self.portname = port
-        self.calibration = False
+        self.calibration = calibrate
         self.new_setup = False
         self.rotate180 = False
         self.color = chess.WHITE
@@ -293,7 +297,7 @@ class Game(threading.Thread):
 
 
 def main():
-    certabo = Certabo(portname)
+    certabo = Certabo(port=portname, calibrate=calibrate)
 
     with open('./lichess.token') as f:
         token = f.read().strip()
