@@ -324,7 +324,7 @@ def main():
 
     try:
         if args.devmode:
-            client = berserk.Client(session, base_url="http://lichess.dev")
+            client = berserk.Client(session, base_url="https://lichess.dev")
         else:
             client = berserk.Client(session)
     except:
