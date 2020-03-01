@@ -68,6 +68,7 @@ for d in (CERTABO_SAVE_PATH, CERTABO_DATA_PATH):
 parser = argparse.ArgumentParser()
 parser.add_argument("--port")
 parser.add_argument("--calibrate", action="store_true")
+parser.add_argument("--devmode", action="store_true")
 # ignore additional parameters
 # parser.add_argument('bar', nargs='?')
 args = parser.parse_args()
@@ -289,7 +290,11 @@ class Game(threading.Thread):
                 time.sleep(0.1)
             ucimove = self.certabo.has_user_move()[0]
             logging.info(f'our move: {ucimove}') 
-            self.client.board.make_move(self.certabo.get_reference(), ucimove)
+            try:
+                self.client.board.make_move(self.certabo.get_reference(), ucimove)
+            except:
+                e = sys.exc_info()[0]
+                logging.info(f'exception on make_move: {e}')
 
     def handle_chat_line(self, chat_line):
         print(chat_line)
@@ -299,11 +304,35 @@ class Game(threading.Thread):
 def main():
     certabo = Certabo(port=portname, calibrate=calibrate)
 
-    with open('./lichess.token') as f:
-        token = f.read().strip()
+    try:
+        with open('./lichess.token') as f:
+            token = f.read().strip()
+    except FileNotFoundError:
+        print(f'ERROR: cannot find token file')
+        sys.exit(-1)
+    except PermissionError:
+        print(f'ERROR: permission denied on token file')
+        sys.exit(-1)
 
-    session = berserk.TokenSession(token)
-    client = berserk.Client(session)
+    try:
+        session = berserk.TokenSession(token)
+    except:
+        e = sys.exc_info()[0]
+        print(f"cannot create session: {e}")
+        logging.info(f'cannot create session {e}')
+        sys.exit(-1)
+
+    try:
+        if args.devmode:
+            client = berserk.Client(session, base_url="http://lichess.dev")
+        else:
+            client = berserk.Client(session)
+    except:
+        e = sys.exc_info()[0]
+        logging.info(f'cannot create lichess client: {e}')
+        print(f"cannot create lichess client: {e}")
+        sys.exit(-1)
+
 
     def setup_new_gameid(gameId):
         for game in client.games.get_ongoing():
@@ -327,32 +356,34 @@ def main():
                     certabo.set_color(chess.WHITE)
                 if game['isMyTurn']:
                     certabo.set_state('myturn')
+    try:
+        for event in client.board.stream_incoming_events():
+            if event['type'] == 'challenge':
+                print("Challenge received")
+                print(event)
+            elif event['type'] == 'gameStart':
+                print("game start received")
 
-    for event in client.board.stream_incoming_events():
-        if event['type'] == 'challenge':
-            print("Challenge received")
-            print(event)
-        elif event['type'] == 'gameStart':
-            print("game start received")
+                # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
+                # print(event)
+                game_data = event['game']
+                # print(game_data)
+                 
+                game = Game(client, certabo, game_data['id'])
+                game.daemon = True
+                game.start()
 
-            # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
-            # print(event)
-            game_data = event['game']
-            # print(game_data)
-             
-            game = Game(client, certabo, game_data['id'])
-            game.daemon = True
-            game.start()
+                setup_new_gameid(game_data['id'])
+                if certabo.get_state() == 'myturn':
+                    certabo.set_state('init')
+                    while certabo.has_user_move() == []:
+                        time.sleep(0.1)
+                    client.board.make_move(certabo.get_reference(), certabo.has_user_move()[0])
+    except berserk.exceptions.ResponseError as e:
+        print(f'ERROR: Invalid server response: {e}')
+        logging.info('Invalid server response: {e}')
 
-            setup_new_gameid(game_data['id'])
-            if certabo.get_state() == 'myturn':
-                certabo.set_state('init')
-                while certabo.has_user_move() == []:
-                    time.sleep(0.1)
-                client.board.make_move(certabo.get_reference(), certabo.has_user_move()[0])
-
-
-                
+                    
 
 if __name__ == '__main__':
     main()
