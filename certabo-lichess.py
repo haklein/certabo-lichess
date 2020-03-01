@@ -356,34 +356,34 @@ def main():
                     certabo.set_color(chess.WHITE)
                 if game['isMyTurn']:
                     certabo.set_state('myturn')
-    try:
-        for event in client.board.stream_incoming_events():
-            if event['type'] == 'challenge':
-                print("Challenge received")
-                print(event)
-            elif event['type'] == 'gameStart':
-                print("game start received")
 
-                # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
-                # print(event)
-                game_data = event['game']
-                # print(game_data)
-                 
-                game = Game(client, certabo, game_data['id'])
-                game.daemon = True
-                game.start()
+    while True:
+        try:
+            for event in client.board.stream_incoming_events():
+                if event['type'] == 'challenge':
+                    print("Challenge received")
+                    print(event)
+                elif event['type'] == 'gameStart':
+                    print("game start received")
 
-                setup_new_gameid(game_data['id'])
-                if certabo.get_state() == 'myturn':
-                    certabo.set_state('init')
-                    while certabo.has_user_move() == []:
-                        time.sleep(0.1)
-                    client.board.make_move(certabo.get_reference(), certabo.has_user_move()[0])
-    except berserk.exceptions.ResponseError as e:
-        print(f'ERROR: Invalid server response: {e}')
-        logging.info('Invalid server response: {e}')
+                    # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
+                    # print(event)
+                    game_data = event['game']
+                    # print(game_data)
+                     
+                    game = Game(client, certabo, game_data['id'])
+                    game.daemon = True
+                    game.start()
 
-                    
+                    setup_new_gameid(game_data['id'])
+                    if certabo.get_state() == 'myturn':
+                        certabo.set_state('init')
+                        while certabo.has_user_move() == []:
+                            time.sleep(0.1)
+                        client.board.make_move(certabo.get_reference(), certabo.has_user_move()[0])
+        except berserk.exceptions.ResponseError as e:
+            print(f'ERROR: Invalid server response: {e}')
+            logging.info('Invalid server response: {e}')
 
 if __name__ == '__main__':
     main()
