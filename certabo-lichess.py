@@ -333,7 +333,6 @@ def main():
         print(f"cannot create lichess client: {e}")
         sys.exit(-1)
 
-
     def setup_new_gameid(gameId):
         for game in client.games.get_ongoing():
             if game['gameId'] == gameId:
@@ -364,16 +363,19 @@ def main():
                     print("Challenge received")
                     print(event)
                 elif event['type'] == 'gameStart':
-                    print("game start received")
-
                     # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
-                    # print(event)
                     game_data = event['game']
-                    # print(game_data)
-                     
-                    game = Game(client, certabo, game_data['id'])
-                    game.daemon = True
-                    game.start()
+                    logging.info(f"game start received: {game_data['id']}")
+
+                    try:
+                        game = Game(client, certabo, game_data['id'])
+                        game.daemon = True
+                        game.start()
+                    except berserk.exceptions.ResponseError as e:
+                        if 'This game cannot be played with the Board API' in str(e):
+                            print('cannot play this game via board api')
+                        logging.info(f'ERROR: {e}')
+                        continue
 
                     setup_new_gameid(game_data['id'])
                     if certabo.get_state() == 'myturn':
@@ -381,9 +383,12 @@ def main():
                         while certabo.has_user_move() == []:
                             time.sleep(0.1)
                         client.board.make_move(certabo.get_reference(), certabo.has_user_move()[0])
+
         except berserk.exceptions.ResponseError as e:
             print(f'ERROR: Invalid server response: {e}')
             logging.info('Invalid server response: {e}')
+            if 'Too Many Requests for url' in e:
+                time.sleep(10)
 
 if __name__ == '__main__':
     main()
