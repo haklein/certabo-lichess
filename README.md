@@ -10,10 +10,7 @@ The API token can be created in the lichess preferences page ("API Access tokens
 
 ### python3 modules
 
-- ndjson
-- deprecated
-- chess
-- berserk lichess client (with board support, see https://github.com/rhgrant10/berserk/pull/10 )
+see `requirements.txt`. You can install the modules via `pip3 install -U -r requirements.txt`
 
 simplejson must not be installed as it doesn't work with berserk
 
