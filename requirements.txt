@@ -1,0 +1,7 @@
+pyserial>=3.4
+requests~=2.20
+ndjson~=0.2
+deprecated~=1.2.7
+python-chess==0.24.1
+berserk>0.7.0
+appdirs
