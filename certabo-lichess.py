@@ -39,38 +39,12 @@ import codes
 from utils import port2number, port2udp, find_port, get_engine_list, get_book_list, coords_in
 from constants import CERTABO_SAVE_PATH, CERTABO_DATA_PATH, MAX_DEPTH_DEFAULT
 
-DEBUG = True
-
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(module)s %(message)s')
-
-filehandler = logging.handlers.TimedRotatingFileHandler(
-    os.path.join(CERTABO_DATA_PATH, "certabo-lichess.log"), backupCount=12
-)
-filehandler.setFormatter(formatter)
-logger.addHandler(filehandler)
-
-# log unhandled exceptions to the log file
-def my_excepthook(excType, excValue, traceback, logger=logger):
-    logger.error("Uncaught exception",
-                 exc_info=(excType, excValue, traceback))
-sys.excepthook = my_excepthook
-
-logging.info("certabi-lichess.py startup")
-
-for d in (CERTABO_SAVE_PATH, CERTABO_DATA_PATH):
-    try:
-        os.makedirs(d)
-    except OSError:
-        pass
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--port")
 parser.add_argument("--calibrate", action="store_true")
 parser.add_argument("--devmode", action="store_true")
-# ignore additional parameters
-# parser.add_argument('bar', nargs='?')
+parser.add_argument("--quiet", action="store_true")
+parser.add_argument("--debug", action="store_true")
 args = parser.parse_args()
 
 portname = 'auto'
@@ -82,6 +56,39 @@ calibrate = False
 if args.calibrate:
     calibrate = True
 
+DEBUG=False
+if args.debug:
+    DEBUG = True
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(module)s %(message)s')
+
+filehandler = logging.handlers.TimedRotatingFileHandler(
+    os.path.join(CERTABO_DATA_PATH, "certabo-lichess.log"), backupCount=12
+)
+filehandler.setFormatter(formatter)
+logger.addHandler(filehandler)
+
+if not args.quiet:
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(formatter)
+    logger.addHandler(consoleHandler)
+
+# log unhandled exceptions to the log file
+def my_excepthook(excType, excValue, traceback, logger=logger):
+    logger.error("Uncaught exception",
+                 exc_info=(excType, excValue, traceback))
+sys.excepthook = my_excepthook
+
+logging.info("certabo-lichess.py startup")
+
+for d in (CERTABO_SAVE_PATH, CERTABO_DATA_PATH):
+    try:
+        os.makedirs(d)
+    except OSError:
+        pass
+
 class serialreader(threading.Thread):
     def __init__ (self, handler, device='auto'):
         threading.Thread.__init__(self)
@@ -90,7 +97,7 @@ class serialreader(threading.Thread):
         self.handler = handler
         self.serial_out = queue.Queue()
 
-    def send_led(self, message):
+    def send_led(self, message: bytes):
         self.serial_out.put(message)
 
     def run(self):
@@ -127,13 +134,16 @@ class serialreader(threading.Thread):
                 try:
                     while uart.inWaiting():
                         # logging.debug(f'serial data pending')
-                        message = uart.readline().decode("ascii")
-                        message = message[1: -3]
-                        #if DEBUG:
-                        #    print(len(message.split(" ")), "numbers")
-                        if len(message.split(" ")) == 320:  # 64*5
-                            self.handler(message)
-                        message = ""
+                        raw_message = uart.readline()
+                        try:
+                            message = raw_message.decode("ascii")[1: -3]
+                            #if DEBUG:
+                            #    print(len(message.split(" ")), "numbers")
+                            if len(message.split(" ")) == 320:  # 64*5
+                                self.handler(message)
+                            message = ""
+                        except Exception as e:
+                            logging.info(f'Exception during message decode: {str(e)}')
                     time.sleep(0.001)
                     if not self.serial_out.empty():
                         data = self.serial_out.get()
@@ -209,7 +219,8 @@ class Certabo():
     def set_board_from_fen(self, fen):
         self.chessboard = chess.Board(fen)
 
-    def send_leds(self, message=b'\x00\x00\x00\x00\x00\x00\x00\x00'):
+    def send_leds(self, message:bytes=(0).to_bytes(8,byteorder='big',signed=False)):
+        # logging.info(f'sending LED: {message}')
         self.serialthread.send_led(message)
 
     def diff_leds(self):
