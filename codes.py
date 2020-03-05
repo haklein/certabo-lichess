@@ -400,7 +400,7 @@ def diff2squareset(s1, s2):
 
 def squareset2ledbytes(squareset):
     # we pack the uint64 squareset bitmask into a big endian bytearray
-    return struct.pack('>Q',squareset)
+    return int(squareset).to_bytes(8, byteorder="big", signed=False)
 
 def usb_data_to_FEN(usb_data, rotate180=False):
     global letter
