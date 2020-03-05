@@ -40,6 +40,7 @@ def load_calibration(port):
             open(os.path.join(CERTABO_DATA_PATH, get_calibration_file_name(port)), "rb")
         )
     except (IOError, OSError):
+        logging.info("WARNING: no calibration found")
         return False
     except ValueError:
         logging.info("Can't load calibration data")
