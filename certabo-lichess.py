@@ -387,7 +387,7 @@ def main():
         except berserk.exceptions.ResponseError as e:
             print(f'ERROR: Invalid server response: {e}')
             logging.info('Invalid server response: {e}')
-            if 'Too Many Requests for url' in e:
+            if 'Too Many Requests for url' in str(e):
                 time.sleep(10)
 
 if __name__ == '__main__':
