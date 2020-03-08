@@ -2,7 +2,6 @@ from __future__ import print_function
 import pickle
 import os
 import chess
-from constants import CERTABO_DATA_PATH
 import logging
 import struct
 
@@ -32,12 +31,12 @@ def get_calibration_file_name(port):
         return "calibration-com{}.bin".format(port + 1)
 
 
-def load_calibration(port):
+def load_calibration(filename):
     global p, r, n, b, k, q, P, R, N, B, K, Q
     logging.info("codes.py - loading calibration")
     try:
         p, r, n, b, k, q, P, R, N, B, K, Q = pickle.load(
-            open(os.path.join(CERTABO_DATA_PATH, get_calibration_file_name(port)), "rb")
+            open(filename, "rb")
         )
     except (IOError, OSError):
         logging.info("WARNING: no calibration found")
@@ -198,7 +197,7 @@ def cell_empty(x):
         return False
 
 
-def calibration(usb_data, new_setup, port):
+def calibration(usb_data, new_setup, filename):
     global p, r, n, b, k, q, P, R, N, B, K, Q
     prev_results = p, r, n, b, k, q, P, R, N, B, K, Q
 
@@ -300,7 +299,7 @@ def calibration(usb_data, new_setup, port):
             Kn,
             Qn,
         )
-    pickle.dump(results, open(os.path.join(CERTABO_DATA_PATH, get_calibration_file_name(port)), "wb"))
+    pickle.dump(results, open(filename, "wb"))
 
     logging.info("----------------")
     # print r
