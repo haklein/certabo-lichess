@@ -18,6 +18,7 @@ import chess
 
 import berserk
 import certabo
+from certabo.certabo import CERTABO_DATA_PATH as CERTABO_DATA_PATH
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port")
@@ -44,7 +45,7 @@ logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(module)s %(message)s')
 
 filehandler = logging.handlers.TimedRotatingFileHandler(
-    os.path.join(certabo.certabo.CERTABO_DATA_PATH, "certabo-lichess.log"), backupCount=12
+    os.path.join(CERTABO_DATA_PATH, "certabo-lichess.log"), backupCount=12
 )
 filehandler.setFormatter(formatter)
 logger.addHandler(filehandler)
