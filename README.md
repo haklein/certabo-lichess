@@ -10,9 +10,13 @@ The API token can be created in the lichess preferences page ("API Access tokens
 
 ### python3 modules
 
-see `requirements.txt`. You can install the modules via `pip3 install -U -r requirements.txt`
+see `requirements.txt`. You can install the modules via `pip3 install --user -r requirements.txt`
 
 simplejson must not be installed as it doesn't work with berserk
+
+### virtual com port driver
+
+On the mac you need to install the Silabs virtual com port driver. It can be downloaded from the CERTABO website: https://www.certabo.com/download/
 
 ### calibration
 
