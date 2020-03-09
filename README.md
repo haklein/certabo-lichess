@@ -6,7 +6,7 @@ This is a python3 based lichess board API client program for CERTABO physical bo
 
 ### Lichess API token
 
-The API token can be created in the lichess preferences page ("API Access tokens"). Generate a personal access token and make sure to enable "Play games with the board API". Store the token in a file named 'lichess.token' in the same directory.
+The API token can be created in the [lichess preferences page ("API Access tokens")](http://l.org/account/oauth/token/create?description=Certabo&scopes[]=board:play). Generate a personal access token and make sure to enable "Play games with the board API". Store the token in a file named 'lichess.token' in the same directory.
 
 ### python3 modules
 
