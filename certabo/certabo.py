@@ -13,6 +13,7 @@ import argparse
 import subprocess
 import threading
 import appdirs
+import pathlib
 
 import berserk
 
@@ -25,6 +26,7 @@ from certabo import serialreader
 
 CERTABO_DATA_PATH = appdirs.user_data_dir("GUI", "Certabo")
 CALIBRATION_DATA = os.path.join(CERTABO_DATA_PATH,"calibration.bin")
+os.makedirs(CERTABO_DATA_PATH, exist_ok=True)
 
 class Certabo():
     def __init__(self, port='auto', calibrate=False, **kwargs):
