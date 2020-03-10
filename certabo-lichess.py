@@ -12,6 +12,7 @@ import traceback
 import os
 import argparse
 import threading
+import importlib
 
 import chess.pgn
 import chess
@@ -107,6 +108,11 @@ class Game(threading.Thread):
 
 
 def main():
+    simplejson_spec = importlib.util.find_spec("simplejson")
+    if simplejson_spec is not None:
+        print(f'ERROR: simplejson is installed. The berserk lichess client will not work with simplejson. Please remove the module. Aborting.')
+        sys.exit(-1)
+
     mycertabo = certabo.certabo.Certabo(port=portname, calibrate=calibrate)
 
     try:
