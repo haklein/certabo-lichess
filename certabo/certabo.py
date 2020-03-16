@@ -134,7 +134,7 @@ class Certabo():
                             if self.wait_for_move:
                                 logging.debug('trying to find user move in usb data')
                                 try:
-                                    self.pending_moves = codes.get_moves(self.chessboard, self.board_state_usb)
+                                    self.pending_moves = codes.get_moves(self.chessboard, self.board_state_usb, 1) # only search one move deep
                                     if self.pending_moves != []:
                                         logging.debug('firing event')
                                         self.chessboard.push_uci(self.pending_moves[0])
