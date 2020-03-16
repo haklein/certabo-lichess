@@ -92,12 +92,10 @@ class Game(threading.Thread):
             self.certabo.set_board_from_fen(tmp_chessboard.fen())
         if tmp_chessboard.turn == self.certabo.get_color():
             logging.info('it is our turn')
-            while self.certabo.has_user_move() == []:
-                time.sleep(0.1)
-            ucimove = self.certabo.has_user_move()[0]
-            logging.info(f'our move: {ucimove}') 
+            moves = self.certabo.get_user_move()
+            logging.info(f'our move: {moves}') 
             try:
-                self.client.board.make_move(self.certabo.get_reference(), ucimove)
+                self.client.board.make_move(self.certabo.get_reference(), moves[0])
             except:
                 e = sys.exc_info()[0]
                 logging.info(f'exception on make_move: {e}')
@@ -193,9 +191,8 @@ def main():
                     if mycertabo.get_state() == 'myturn':
                         logging.info(f'starting new game, checking for user move')
                         mycertabo.set_state('init')
-                        while mycertabo.has_user_move() == []:
-                            time.sleep(0.1)
-                        client.board.make_move(mycertabo.get_reference(), mycertabo.has_user_move()[0])
+                        moves = mycertabo.get_user_move()
+                        client.board.make_move(mycertabo.get_reference(), moves[0])
 
         except berserk.exceptions.ResponseError as e:
             print(f'ERROR: Invalid server response: {e}')

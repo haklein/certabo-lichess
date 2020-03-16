@@ -41,6 +41,9 @@ class Certabo():
         self.board_state_usb = ""
         self.mystate = "init"
         self.reference = ""
+        self.move_event = threading.Event()
+        self.wait_for_move = False
+        self.pending_moves = []
 
         # internal values for CERTABO board
         self.calibration_samples_counter = 0
@@ -60,12 +63,14 @@ class Certabo():
         self.serialthread.daemon = True
         self.serialthread.start()
 
-    def has_user_move(self):
-        try:
-            moves = codes.get_moves(self.chessboard, self.board_state_usb)
-            return moves
-        except:
-            return []
+    def get_user_move(self):
+        self.wait_for_move = True
+        logging.debug('waiting for event signal')
+        self.move_event.wait()
+        self.move_event.clear()
+        logging.debug(f'event signal received, pending moves: {self.pending_moves}')
+        self.wait_for_move = False
+        return self.pending_moves 
 
     def get_reference(self):
         return self.reference
@@ -125,6 +130,16 @@ class Certabo():
                         self.board_state_usb = test_state
                         # logging.info(f'info string FEN {test_state}')
                         self.diff_leds()
+                        if self.wait_for_move:
+                            logging.debug('trying to find user move in usb data')
+                            try:
+                                self.pending_moves = codes.get_moves(self.chessboard, self.board_state_usb)
+                                if self.pending_moves != []:
+                                    logging.debug('firing event')
+                                    self.chessboard.push_uci(self.pending_moves[0])
+                                    self.move_event.set()
+                            except:
+                                self.pending_moves = []
 
     def calibrate_from_usb_data(self, usb_data):
         self.calibration_samples.append(usb_data)
