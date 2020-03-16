@@ -169,6 +169,7 @@ def main():
 
     while True:
         try:
+            logging.debug(f'board event loop')
             for event in client.board.stream_incoming_events():
                 if event['type'] == 'challenge':
                     print("Challenge received")
@@ -190,6 +191,7 @@ def main():
 
                     setup_new_gameid(game_data['id'])
                     if mycertabo.get_state() == 'myturn':
+                        logging.info(f'starting new game, checking for user move')
                         mycertabo.set_state('init')
                         while mycertabo.has_user_move() == []:
                             time.sleep(0.1)
