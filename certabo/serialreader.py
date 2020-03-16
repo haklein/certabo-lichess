@@ -55,12 +55,30 @@ class serialreader(threading.Thread):
         self.connected = False
         self.handler = handler
         self.uart = None
+        self.buf = bytearray()
 
     def send_led(self, message: bytes):
         # logging.debug(f'Sending to serial: {message}')
         if self.connected:
             return self.uart.write(message)
         return None
+
+    def readline(self):
+        i = self.buf.find(b"\n")
+        if i >= 0:
+            r = self.buf[:i+1]
+            self.buf = self.buf[i+1:]
+            return r
+        while True:
+            i = max(1, min(2048, self.uart.in_waiting))
+            data = self.uart.read(i)
+            i = data.find(b"\n")
+            if i >= 0:
+                r = self.buf + data[:i+1]
+                self.buf[0:] = data[i+1:]
+                return r
+            else:
+                self.buf.extend(data)
 
     def run(self):
         while True:
@@ -97,7 +115,8 @@ class serialreader(threading.Thread):
                 try:
                     while True:
                         # logging.debug(f'serial data pending')
-                        raw_message = self.uart.readline()
+                        #raw_message = self.uart.readline()
+                        raw_message = self.readline()
                         try:
                             message = raw_message.decode("ascii")[1: -3]
                             #if DEBUG:
