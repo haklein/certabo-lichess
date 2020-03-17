@@ -128,7 +128,12 @@ class Certabo():
                     test_state = codes.usb_data_to_FEN(self.usb_data_processed, self.rotate180)
                     if test_state != "":
                         if self.board_state_usb != test_state:
-                            self.board_state_usb = test_state
+                            new_position = True
+                        else:
+                            new_position = False
+                        self.board_state_usb = test_state
+                        self.diff_leds()
+                        if new_position:
                             # new board state via usb
                             # logging.info(f'info string FEN {test_state}')
                             if self.wait_for_move:
@@ -137,11 +142,10 @@ class Certabo():
                                     self.pending_moves = codes.get_moves(self.chessboard, self.board_state_usb, 1) # only search one move deep
                                     if self.pending_moves != []:
                                         logging.debug('firing event')
-                                        self.chessboard.push_uci(self.pending_moves[0])
+                                        # self.chessboard.push_uci(self.pending_moves[0])
                                         self.move_event.set()
                                 except:
                                     self.pending_moves = []
-                        self.diff_leds()
 
     def calibrate_from_usb_data(self, usb_data):
         self.calibration_samples.append(usb_data)
