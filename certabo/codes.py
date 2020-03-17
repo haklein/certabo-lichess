@@ -592,7 +592,7 @@ class InvalidMove(Exception):
     pass
 
 
-def get_moves(board, fen):
+def get_moves(board, fen, max_depth =2):
     """
     :param board:
     :type board: chess.Board
@@ -613,16 +613,17 @@ def get_moves(board, fen):
             logging.debug('Single move detected - {}'.format(move.uci()))
             return [move.uci()]
         copy_board.pop()
-    for move in moves:
-        copy_board.push(move)
-        legal_moves2 = list(copy_board.generate_legal_moves())
-        for move2 in legal_moves2:
-            copy_board.push(move2)
-            if board_fen == copy_board.board_fen():
-                logging.debug('Double move detected - {}, {}'.format(move.uci(), move2.uci()))
-                return [move.uci(), move2.uci()]
+    if max_depth > 1:
+        for move in moves:
+            copy_board.push(move)
+            legal_moves2 = list(copy_board.generate_legal_moves())
+            for move2 in legal_moves2:
+                copy_board.push(move2)
+                if board_fen == copy_board.board_fen():
+                    logging.debug('Double move detected - {}, {}'.format(move.uci(), move2.uci()))
+                    return [move.uci(), move2.uci()]
+                copy_board.pop()
             copy_board.pop()
-        copy_board.pop()
-    # logging.debug('Unable to detect moves')
+    logging.debug('Unable to detect moves')
     raise InvalidMove()
 
