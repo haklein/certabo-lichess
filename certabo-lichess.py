@@ -24,6 +24,7 @@ from certabo.certabo import CERTABO_DATA_PATH as CERTABO_DATA_PATH
 parser = argparse.ArgumentParser()
 parser.add_argument("--port")
 parser.add_argument("--calibrate", action="store_true")
+parser.add_argument("--addpiece", action="store_true")
 parser.add_argument("--devmode", action="store_true")
 parser.add_argument("--quiet", action="store_true")
 parser.add_argument("--debug", action="store_true")
@@ -33,9 +34,12 @@ portname = 'auto'
 if args.port is not None:
     portname = args.port
 
-calibrate = False
+calibrate = 0 # don't do calibration by default
 if args.calibrate:
-    calibrate = True
+    calibrate = 2 # do fresh calibration
+
+if args.addpiece:
+    calibrate = 1 # add further pieces to existing calibration
 
 DEBUG=False
 if args.debug:

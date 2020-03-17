@@ -29,11 +29,17 @@ CALIBRATION_DATA = os.path.join(CERTABO_DATA_PATH,"calibration.bin")
 os.makedirs(CERTABO_DATA_PATH, exist_ok=True)
 
 class Certabo():
-    def __init__(self, port='auto', calibrate=False, **kwargs):
+    def __init__(self, port='auto', calibrate=0, **kwargs):
         super().__init__(**kwargs)
         self.portname = port
-        self.calibration = calibrate
-        self.new_setup = False
+        if calibrate:
+            self.calibration = True
+        else:
+            self.calibration = False
+        if calibrate > 1:
+            self.new_setup = True
+        else:
+            self.new_setup = False
         self.rotate180 = False
         self.color = chess.WHITE
         self.starting_position = chess.STARTING_FEN
