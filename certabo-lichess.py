@@ -23,6 +23,7 @@ from certabo.certabo import CERTABO_DATA_PATH as CERTABO_DATA_PATH
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port")
+parser.add_argument("--tokenfile")
 parser.add_argument("--calibrate", action="store_true")
 parser.add_argument("--addpiece", action="store_true")
 parser.add_argument("--correspondence", action="store_true")
@@ -34,6 +35,10 @@ args = parser.parse_args()
 portname = 'auto'
 if args.port is not None:
     portname = args.port
+
+TOKEN_FILE='./lichess.token'
+if args.tokenfile is not None:
+    TOKEN_FILE = args.tokenfile
 
 calibrate = 0 # don't do calibration by default
 if args.calibrate:
@@ -123,7 +128,8 @@ def main():
     mycertabo = certabo.certabo.Certabo(port=portname, calibrate=calibrate)
 
     try:
-        with open('./lichess.token') as f:
+        logging.info(f'reading token from {TOKEN_FILE}')
+        with open(TOKEN_FILE) as f:
             token = f.read().strip()
     except FileNotFoundError:
         print(f'ERROR: cannot find token file')
