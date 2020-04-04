@@ -107,12 +107,18 @@ class Game(threading.Thread):
         if tmp_chessboard.turn == self.certabo.get_color():
             logging.info('it is our turn')
             moves = self.certabo.get_user_move()
-            logging.info(f'our move: {moves}') 
-            try:
-                self.client.board.make_move(self.certabo.get_reference(), moves[0])
-            except:
-                e = sys.exc_info()[0]
-                logging.info(f'exception on make_move: {e}')
+            logging.info(f'our move: {moves}')
+            for attempt in range(3):
+                try:
+                    self.client.board.make_move(self.certabo.get_reference(), moves[0])
+                    break
+                except:
+                    e = sys.exc_info()[0]
+                    logging.info(f'exception on make_move: {e}')
+                if attempt > 1:
+                    logging.debug(f'sleeping before retry')
+                    time.sleep(3)
+
 
     def handle_chat_line(self, chat_line):
         print(chat_line)
