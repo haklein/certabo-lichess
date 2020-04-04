@@ -20,7 +20,11 @@ On the mac you need to install the Silabs virtual com port driver. It can be dow
 
 ### calibration
 
-Calibration can be run with the optional "--calibrate" command line argument. Make sure to have the pieces on the correct places.
+Calibration (mapping the chip IDs to pieces) can be run with the optional "--calibrate" command line argument. Make sure to have the pieces on the correct places. If you want to add further pieces to the calibration, use the "--addpiece" argument (e.g. for adding a 2nd pair of queens, or adding multiple sets in different styles).
+
+## Usage
+
+Run the python script, and start a game on Lichess that is compatible with the board API (not all speeds are supported, also depending if it is a rated game or not). Correspondence games are skipped by default, if you want to play them, use the "--correspondence" argument. 
 
 ## Todo
 

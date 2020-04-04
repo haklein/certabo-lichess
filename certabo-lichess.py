@@ -25,6 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--port")
 parser.add_argument("--calibrate", action="store_true")
 parser.add_argument("--addpiece", action="store_true")
+parser.add_argument("--correspondence", action="store_true")
 parser.add_argument("--devmode", action="store_true")
 parser.add_argument("--quiet", action="store_true")
 parser.add_argument("--debug", action="store_true")
@@ -40,6 +41,10 @@ if args.calibrate:
 
 if args.addpiece:
     calibrate = 1 # add further pieces to existing calibration
+
+correspondence = False
+if args.correspondence:
+    correspondence = True
 
 DEBUG=False
 if args.debug:
@@ -146,6 +151,19 @@ def main():
         print(f"cannot create lichess client: {e}")
         sys.exit(-1)
 
+    def is_correspondence(gameId):
+        try:
+            for game in client.games.get_ongoing():
+                if game['gameId'] == gameId:
+                    if game['speed'] == "correspondence":
+                        return True
+        except:
+            e = sys.exc_info()[0]
+            print(f"cannot determine game speed: {e}")
+            logging.info(f'cannot determine if game is correspondence: {e}')
+            return False
+        return False
+
     def setup_new_gameid(gameId):
         for game in client.games.get_ongoing():
             if game['gameId'] == gameId:
@@ -180,6 +198,12 @@ def main():
                     # {'type': 'gameStart', 'game': {'id': 'pCHwBReX'}}
                     game_data = event['game']
                     logging.info(f"game start received: {game_data['id']}")
+
+                    # check if game speed is correspondence, skip those if --correspondence argument is not set
+                    if not correspondence:
+                        if is_correspondence(game_data['id']):
+                            logging.info(f"skipping corespondence game: {game_data['id']}")
+                            continue
 
                     try:
                         game = Game(client, mycertabo, game_data['id'])
