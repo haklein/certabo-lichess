@@ -185,7 +185,7 @@ def main():
                 tmp_chessboard = chess.Board()
                 # unfortunately this is not a complete FEN. So we can only determine position and who's turn it is for an already ongoing game, but have no idea about castling 
                 # rights and en passant. But that's the best we can do for now, and on the next state update we'll get all moves and can replay them to get a complete board state
-                tmp_chessboard.set_board_fen(game['fen']) 
+                tmp_chessboard.set_fen(game['fen']) 
                 if game['isMyTurn'] and game['color']=='black':
                     tmp_chessboard.turn = chess.BLACK
                 else:
